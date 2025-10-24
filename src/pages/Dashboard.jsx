@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import EmployeeDetails from "../components/EmployeeDetails";
 import TodaySummary from "../components/TodaySummary";
 import BreakTime from "../components/BreakTime";
@@ -8,18 +8,52 @@ import WeeklyStatusChart from "../components/WeeklyStatusChart";
 import Admin from "../components/admin/Admin";
 import { ROUTES } from "../constants/routes";
 import CalendarGrid from "../components/calendar/CalendarGrid";
- 
+
+// --- START: Helper functions to read from localStorage ---
+
+// This function gets the last active page from storage, or defaults to DASHBOARD
+const getInitialActivePage = () => {
+  const savedPage = localStorage.getItem("activePage");
+  // Check if the saved page is a valid key in our ROUTES object before using it
+  return savedPage && Object.values(ROUTES).includes(savedPage)
+    ? savedPage
+    : ROUTES.DASHBOARD;
+};
+
+// This function gets the sidebar state from storage, or defaults to true (open)
+const getInitialSidebarState = () => {
+  const savedState = localStorage.getItem("sidebarOpen");
+  return savedState !== null ? JSON.parse(savedState) : true;
+};
+
+// --- END: Helper functions ---
+
 export default function Dashboard() {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [activePage, setActivePage] = useState(ROUTES.DASHBOARD); // ✅ control content
- 
+  // Use our new functions to set the initial state from localStorage
+  const [isSidebarOpen, setIsSidebarOpen] = useState(getInitialSidebarState);
+  const [activePage, setActivePage] = useState(getInitialActivePage);
+
+  // --- START: useEffect hooks to save state changes to localStorage ---
+
+  // This effect runs whenever 'isSidebarOpen' changes, and saves the new value
+  useEffect(() => {
+    localStorage.setItem("sidebarOpen", JSON.stringify(isSidebarOpen));
+  }, [isSidebarOpen]);
+
+  // This effect runs whenever 'activePage' changes, and saves the new value
+  useEffect(() => {
+    localStorage.setItem("activePage", activePage);
+  }, [activePage]);
+
+  // --- END: useEffect hooks ---
+
   return (
     <div className="min-h-screen bg-gray-100">
       {/* Header Navbar */}
       <header className="w-full fixed top-0 left-0 z-50 shadow-md bg-white">
         <Navbar onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
       </header>
- 
+
       <div className="flex pt-[70px]">
         {/* Sidebar */}
         <div
@@ -29,11 +63,11 @@ export default function Dashboard() {
         >
           <EmpSidebar
             isOpen={isSidebarOpen}
-            onNavigate={setActivePage} // ✅ update active page
+            onNavigate={setActivePage} // This continues to work as before
             activePage={activePage}
           />
         </div>
- 
+
         {/* Main Content */}
         <div
           className={`flex-1 transition-all duration-300 pt-8 px-4 sm:px-6 lg:px-8 ${
@@ -43,44 +77,42 @@ export default function Dashboard() {
           <main className="grid grid-cols-8 gap-6">
             {activePage === ROUTES.DASHBOARD && (
               <>
-                <div className="col-span-2 bg-white p-4 rounded-xl shadow-md">
+                <div className="col-span-8 lg:col-span-2 bg-white p-4 rounded-xl shadow-md">
                   <EmployeeDetails />
                 </div>
-                <div className="col-span-2 bg-white p-4 rounded-xl shadow-md">
+                <div className="col-span-8 lg:col-span-2 bg-white p-4 rounded-xl shadow-md">
                   <BreakTime />
                 </div>
-                <div className="col-span-4 bg-white p-6 rounded-xl shadow-md">
+                <div className="col-span-8 lg:col-span-4 bg-white p-6 rounded-xl shadow-md">
                   <TodaySummary />
                 </div>
-                <div className="col-span-4 bg-white p-6 rounded-xl shadow-md">
+                <div className="col-span-8 lg:col-span-4 bg-white p-6 rounded-xl shadow-md">
                   <WeeklyStatusChart />
                 </div>
-                <div className="col-span-4 bg-white p-6 rounded-xl shadow-md">
+                <div className="col-span-8 lg:col-span-4 bg-white p-6 rounded-xl shadow-md">
                   <CalendarGrid />
                 </div>
               </>
             )}
- 
+
             {activePage === ROUTES.CALENDARGRID && (
               <div className="col-span-8 bg-white p-6 rounded-xl shadow-md">
-                <h2 className="text-xl font-semibold">
-                  <CalendarGrid />
-                </h2>
+                <CalendarGrid />
               </div>
             )}
- 
+
             {activePage === ROUTES.ADMIN && (
               <div className="col-span-8 bg-white p-6 rounded-xl shadow-md">
                 <Admin />
               </div>
             )}
- 
+
             {activePage === ROUTES.LEAVE && (
               <div className="col-span-8 bg-white p-6 rounded-xl shadow-md">
                 <h2 className="text-xl font-semibold">Leave Request Page</h2>
               </div>
             )}
- 
+
             {activePage === ROUTES.CORRECTION && (
               <div className="col-span-8 bg-white p-6 rounded-xl shadow-md">
                 <h2 className="text-xl font-semibold">
@@ -88,7 +120,7 @@ export default function Dashboard() {
                 </h2>
               </div>
             )}
- 
+
             {activePage === ROUTES.PERMISSION && (
               <div className="col-span-8 bg-white p-6 rounded-xl shadow-md">
                 <h2 className="text-xl font-semibold">
@@ -96,7 +128,7 @@ export default function Dashboard() {
                 </h2>
               </div>
             )}
- 
+
             {activePage === ROUTES.RESET && (
               <div className="col-span-8 bg-white p-6 rounded-xl shadow-md">
                 <h2 className="text-xl font-semibold">
